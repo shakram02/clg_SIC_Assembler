@@ -1,0 +1,58 @@
+﻿begin
+read first input line 
+if (OPCODE = "START" )
+{
+	save #[OPERAND] as starting address
+	initialize LOCCTR to starting address 
+	write line to intermediate file
+	read next input line 
+}
+else
+{
+	 initialize LOCCTR to 0 
+}
+    
+
+while OPCODE != “END” 
+{ 
+    if this is not a comment line
+	{
+	    if there is a symbol in the LABEL field 
+        {
+			search SYMTAB for LABEL 
+                if found 
+                    set error flag (duplicate symbol)
+                else 
+                    insert (LABEL, LOCCTR) into SYMTAB
+        }
+            
+		search OPTAB for OPCODE 
+        {
+		    if found 
+                add 3(instruction length) to LOCCTR 
+        
+		    else if OPCODE = ‘WORD’
+                then add 3 to LOCCTR 
+        
+		    else if OPCODE = ‘RESW’
+                then add 3 * #[OPERAND] to LOCCTR
+        
+		    else if OPCODE = ‘RESB’
+                then add #[OPERAND] to LOCCTR
+        
+		    else if OPCODE = ‘BYTE’ 
+                then begin find length of constant in bytes add length to LOCCTR
+            
+			else 
+				set error flag (invalid operation code) 
+		}
+    }
+    
+	write line to intermediate file
+
+    read next input line 
+}
+
+write last line to intermediate file
+save (LOCCTR - starting address) as program length 
+end { Pass 1 }

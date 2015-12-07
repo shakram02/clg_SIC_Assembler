@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembler-SIC", "Assembler-SIC\Assembler-SIC.csproj", "{D330ED74-9010-4DCA-90AB-54612698942D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestLineParserClass", "TestLineParserClass\TestLineParserClass.csproj", "{893F2B3D-A4C4-4D78-98A7-83E284B8E3DB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D330ED74-9010-4DCA-90AB-54612698942D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D330ED74-9010-4DCA-90AB-54612698942D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D330ED74-9010-4DCA-90AB-54612698942D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D330ED74-9010-4DCA-90AB-54612698942D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{893F2B3D-A4C4-4D78-98A7-83E284B8E3DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{893F2B3D-A4C4-4D78-98A7-83E284B8E3DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{893F2B3D-A4C4-4D78-98A7-83E284B8E3DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{893F2B3D-A4C4-4D78-98A7-83E284B8E3DB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
