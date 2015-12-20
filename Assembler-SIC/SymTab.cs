@@ -40,12 +40,17 @@ namespace Assembler_SIC
             _symTab.Add(mnemonic, address);
         }
 
+        public static int GetAdress(string targetSymbol)
+        {
+            return _symTab[targetSymbol];
+        }
+
         public static void Flush()
         {
             LogFile.Write("Logging symtab");
             foreach (KeyValuePair<string, int> item in _symTab)
             {
-                LogFile.Write($"{item.Key} , {item.Value}");
+                LogFile.Write($"{item.Key} , {item.Value.ToString("X")}");
             }
         }
     }

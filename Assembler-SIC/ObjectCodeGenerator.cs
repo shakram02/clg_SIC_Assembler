@@ -24,24 +24,35 @@ namespace Assembler_SIC
                 string objCode = "";
                 MachineOperation currentOperation;
 
-                // The target address is calculated only when the opeation is not an assembler directive
+                // The target address is calculated only when the operation is not an assembler directive
                 if ((currentOperation = OpTab.Get(line.Operation)) != null)
                 {
                     // Operation found
-                    objCode += currentOperation.OpCode.ToString("X");
+                    objCode += $"{currentOperation.OpCode.ToString("X")}";
 
-                    // Calculate the address 
+                    // Calculate the address
                     if (line.Value.EndsWith(",x"))
                     {
                         // Set the indexed mode bit
                         line.Address |= (1 << 15);
                     }
-                    // Convert the address to hexadecimal
-                    objCode += line.Address.ToString("X");
+                    else
+                    {
+                        // TODO Get the address of the operand and convert it to hexa, then add it to the object code
+                        if (line.Value.StartsWith("="))
+                        {
+                            // TODO get the address from the literal table
+                        }
+                        else
+                        {
+                            objCode += SymTab.GetAdress(line.Value).ToString("X");
+                        }
+                    }
+                    // Convert the address to hexadecimal, ERROR address shall not be added in object code
+                    //objCode += line.Address.ToString("X");
 
                     // Store the object code in its place in the intermediate file
                     line.ObjectCode = objCode;
-
                 }
                 // Check the operations
                 else
@@ -58,10 +69,11 @@ namespace Assembler_SIC
                             else
                             {
                                 // Operand is a text string
-                                char[] tempCharArray = line.Operation.ToCharArray();
+                                char[] tempCharArray = line.Value.ToCharArray();
                                 foreach (char item in tempCharArray)
                                 {
-                                    line.ObjectCode += (int)item;
+                                    // Convert ascii value to hexadeciaml value
+                                    line.ObjectCode += ((int)item).ToString("X");
                                 }
                                 break;
                             }
@@ -69,12 +81,14 @@ namespace Assembler_SIC
                             // Store the hex string of the word
                             line.ObjectCode = int.Parse(line.Value).ToString("X");
                             break;
+
                         case "resb":
                         case "resw":
                         case "start":
                         case "end":
                             line.ObjectCode = "";
                             break;
+
                         default:
                             line.ObjectCode = "??";
                             break;
@@ -123,7 +137,6 @@ namespace Assembler_SIC
                 int recordObjectCodeLength = 0;
                 string textRecord = "";
 
-
                 for (; recordObjectCodeLength < 60 && i < limit; i++)
                 {
                     IntermediateFileEntry currentEntry = table[i];
@@ -144,7 +157,6 @@ namespace Assembler_SIC
 
                 // Write the text record to the file
                 ObjectCodeFile.WriteRecord("T" + textRecord);
-
             }
         }
 

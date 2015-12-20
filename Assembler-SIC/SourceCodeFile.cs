@@ -75,7 +75,7 @@ namespace Assembler_SIC
                 return false;
             }
 
-            line = sourceFile.ReadLine().ToLower();
+            line = sourceFile.ReadLine();
             Debug.WriteLine(line);
 
             lineNumber++;
@@ -94,33 +94,48 @@ namespace Assembler_SIC
             try
             {
                 // TODO Add variable names for numbers
-                label = empty.Insert(0, line.Substring(0, 8)).TrimEnd();
+                label = empty.Insert(0, line.Substring(0, 8)).TrimEnd().ToLower();
 
-                operationCode = empty.Insert(0, line.Substring(9, 8)).TrimEnd();
+                operationCode = empty.Insert(0, line.Substring(9, 8)).TrimEnd().ToLower();
 
                 temp = line.Substring(17);
+                if (temp.Contains("X'") || temp.Contains("C'"))
+                {
+                    temp = temp.Replace("X'", "x'");
+                    temp = temp.Replace("C'", "c'");
+                }
 
                 int indexOfSpace = temp.IndexOf(" ");
 
                 if (operationCode == "byte" || operationCode == "resb" || operationCode == "resw" || operationCode == "word")
                 {
                     // Assembler directrives cannot containt inline comments, so I use the operand field directly
-                    operands = empty.Insert(0, line.Substring(17).TrimEnd());
+                    operands = empty.Insert(0, temp.TrimEnd());
                 }
-                // Space not found
-                else if (indexOfSpace == -1)
+
+                else if (indexOfSpace == -1 && indexOfSpace != 0)
                 {
+                    // Space not found, the operand field doesn't contain a comment
                     operands = temp;
                 }
                 else
                 {
-                    operands = empty.Insert(0, line.Substring(17, indexOfSpace - 17)).TrimEnd();
-                    comment = empty.Insert(0, line.Substring(indexOfSpace, line.Length - indexOfSpace)).TrimEnd();
+                    // The operand field has a comment
+                    if (indexOfSpace == 0)
+                    {
+                        // Misformated operand field
+                        LogFile.logError($"file read error in input line number {lineNumber}, misformated operand field");
+                        lineStruct = new CodeLine(label, operationCode, operands, isComment: false, isError: true);
+                        return false;
+                    }
+                    operands = empty.Insert(0, line.Substring(17, indexOfSpace)).TrimEnd();
+                    comment = empty.Insert(0, temp.Substring(indexOfSpace, temp.Length - indexOfSpace)).TrimEnd();
                 }
             }
             catch (Exception ex)
             {
                 // Write the line as it is to the list file
+
 
                 // Splitting Error
                 LogFile.logError($"file read error in input line number {lineNumber} Details:\n " + ex.Message);
@@ -130,7 +145,7 @@ namespace Assembler_SIC
                 return false;
             }
 
-            lineStruct = new CodeLine(label, operationCode, operands, isComment: false);
+            lineStruct = new CodeLine(label, operationCode, operands, isComment: false, Comment: comment);
             return true;
         }
     }

@@ -32,27 +32,25 @@ namespace Assembler_SIC
                     // Add label to symtab if it's not whitespace
                     if (!String.IsNullOrWhiteSpace(line.Label))
                     {
-                        if (SymTab.Exists(Assembler.CurrentCodeLine.Label) == true)
+                        if (SymTab.Exists(Assembler.CurrentCodeLine.Label) != true)
                         {
-                            LogFile.logError("duplicate label definition");
+                            // Increment the location counter and inserts to intermediate file and checks the operands
+                            if (updateLocationCounter())
+                            {
+                                // Write the entry in debug window
+                                Debug.WriteLine("Inserted to symbol table: " + line.Label + "  " + Assembler.LocationCounter);
+                                SymTab.Insert(line.Label, previousLocationCounter);
+                                insertToIntermediateFile();
+                            }
                         }
                         else
                         {
-                            // Write the entry in debug window
-                            Debug.WriteLine("Inserted to symbol table: " + line.Label + "  " + Assembler.LocationCounter);
-                            SymTab.Insert(line.Label, Assembler.LocationCounter);
-
-                            // Increment the location counter and inserts to intermediate file
-                            if (updateLocationCounter())
-                            {
-                                insertToIntermediateFile();
-                            }
+                            LogFile.logError("duplicate label definition");
                         }
                     }
                     else
                     {
-                        // Empty label
-                        // Increment the location counter and inserts to intermediate file
+                        // Label is empty, update the location counter directly
                         if (updateLocationCounter())
                         {
                             insertToIntermediateFile();
@@ -61,7 +59,7 @@ namespace Assembler_SIC
                 }
                 else
                 {
-                    // TODO Can't assign this label, write to listing file
+                    // Can't assign this label, write to listing file, error in label format
                     LogFile.logError($"{line.Label} {line.Operation} {line.Operands} can't assign this label");
                 }
             }
@@ -72,11 +70,9 @@ namespace Assembler_SIC
                 {
                     return false;
                 }
-                else
+                else if (Assembler.CurrentCodeLine.isComment)
                 {
-                    // TODO Write the comment to the list file
-
-                    // TODO Declare the comment in the log file
+                    // Write the comment to the log file
                     LogFile.logLine(lineNumber, Assembler.CurrentCodeLine.Comment);
                 }
             }
@@ -91,8 +87,14 @@ namespace Assembler_SIC
         private static void insertToIntermediateFile()
         {
             // Store the instruction with the old value of the location counter
-            IntermediateTable.Insert(new IntermediateFileEntry(line.Label, line.Operation, line.Operands, previousLocationCounter));
-
+            if (line.Operation == "start")
+            {
+                IntermediateTable.Insert(new IntermediateFileEntry(line.Label, line.Operation, value: line.Operands, address: Assembler.StartLocation));
+            }
+            else
+            {
+                IntermediateTable.Insert(new IntermediateFileEntry(line.Label, line.Operation, value: line.Operands, address: previousLocationCounter));
+            }
             LogFile.logLine(line.Label, line.Operation, line.Operands);
         }
 
@@ -117,6 +119,7 @@ namespace Assembler_SIC
                 {
                     // Set the program start location to the operand
                     Assembler.StartLocation = Assembler.LocationCounter;
+                    previousLocationCounter = Assembler.LocationCounter;
                 }
                 else
                 {
@@ -124,7 +127,7 @@ namespace Assembler_SIC
                     Assembler.LocationCounter = 0;
 
                     // Store the current line with the last advanced location counter
-                    int previousLocationCounter = Assembler.LocationCounter;
+                    previousLocationCounter = Assembler.LocationCounter;
 
                     LogFile.logError("Didn't find starting address, initializing location counter to 0");
 
@@ -229,7 +232,7 @@ namespace Assembler_SIC
                         if (int.TryParse(line.Operands, out numberOfBytesToReserve))
                         {
                             // Store the word with the label in the symbol table
-                            SymTab.Insert(line.Label, Assembler.LocationCounter);
+                            SymTab.Insert(line.Label, previousLocationCounter);
 
                             // Multiply the word length by 1 * number of bytes, add it to the location counter
                             Assembler.LocationCounter += numberOfBytesToReserve;
@@ -281,12 +284,14 @@ namespace Assembler_SIC
                             if (temp.Length % 2 != 0)
                             {
                                 LogFile.logError($">{line.Operands}< Odd length hex string in byte statement");
+                                return false;
                             }
 
                             int result = int.Parse(temp, System.Globalization.NumberStyles.HexNumber);
                             line.Operands = result.ToString();
 
-                            Assembler.LocationCounter += 3;
+                            // The number of bytes are the length of the hexstring divided by 2
+                            Assembler.LocationCounter += temp.Length / 2;
 
                             // Insert to intermediate file
                             return true;

@@ -15,7 +15,7 @@ namespace UnitTestProject1
             while (t = LineParser.ParseLineFromSourceFile()) { }
             ObjectCodeGenerator.GenerateObjectRecords();
             table.Flush();
-            System.Convert.ToInt64("0x005", 2);
+            //System.Convert.ToInt64("0x005", 2);
             SymTab.Flush();
 
             LogFile.CloseLog();

@@ -14,6 +14,7 @@ namespace Assembler_SIC
         {
             logFile.WriteLine("#  Loc label     operation       operands");
         }
+
         public static void logError(string message)
         {
             logFile.WriteLine($"Line number {LineParser.lineNumber}, Error: " + message);
@@ -45,12 +46,13 @@ namespace Assembler_SIC
 
         public static void logLine(List<IntermediateFileEntry> table)
         {
-            LogFile.Write("--------------------");
-            LogFile.Write("Logging intermediate file");
+            Write("--------------------");
+            Write("Logging intermediate file");
 
             foreach (IntermediateFileEntry item in table)
             {
-                LogFile.Write($"{item.Address.ToString("X"),3} {item.ObjectCode,6} {item.Label,8} {item.Operation,8}        {item.Value}");
+                // Don't print the object code if it's empy
+                Write($"{item.Address.ToString("X"),3} {(item.ObjectCode != "" ? item.ObjectCode.PadLeft(6, '0') : null),6} {item.Label,8} {item.Operation,8}        {item.Value}");
             }
         }
     }
