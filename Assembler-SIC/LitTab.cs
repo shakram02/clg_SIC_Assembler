@@ -8,15 +8,15 @@ namespace Assembler_SIC
 {
     public class LitTabEntry
     {
-
+        private bool isNum;
 
         public string Name { get; }
 
         public int? Address { get; set; }
 
-        public bool Interted { get; set; }
+        public bool Inserted { get; set; }
         /// <summary>
-        /// Decimal value of the literal
+        /// Hexadecimal value of the literal
         /// </summary>
         public string Value { get; }
 
@@ -24,7 +24,7 @@ namespace Assembler_SIC
 
         public LitTabEntry(string name, int? address)
         {
-            this.Interted = false;
+            this.Inserted = false;
             if (name == null)
                 throw new InvalidOperationException("Can't assign a value to an empty string");
 
@@ -40,8 +40,9 @@ namespace Assembler_SIC
                 throw new InvalidOperationException("Literal value is invalid");
             }
 
-            // Add the entry to the assembler
-            Assembler.LitTab.Add(name, this);
+            // Add the entry to the assembler if it's not previoulsy defined
+            if (Assembler.LitTab.ContainsKey(name) == false)
+                Assembler.LitTab.Add(name, this);
         }
 
         private string extractValue(string name)
@@ -49,6 +50,14 @@ namespace Assembler_SIC
             // Remove the equal sign attached to X' --- ' and C' --- '
             try
             {
+                if (name.ToLower().StartsWith("=x'"))
+                {
+                    isNum = true;
+                }
+                else
+                {
+                    isNum = false;
+                }
                 name = name.Remove(0, 3);
                 name = name.Remove(name.Length - 1);
             }
@@ -64,19 +73,16 @@ namespace Assembler_SIC
 
         private string parseName(string name)
         {
-            int value;
 
             // If valid, convert the number to a hex string
-            if (int.TryParse(name,
-                System.Globalization.NumberStyles.HexNumber,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out value))
+            if (isNum)
             {
+                int.Parse(name, System.Globalization.NumberStyles.HexNumber);
                 // Int in SIC is 3 bytes
                 this.Size = 3;
-                return value.ToString();
+                return name;
             }
-            else if (name.ToLower().StartsWith("c'"))
+            else
             {
                 // ASCII Hexadecimal values
                 StringBuilder val = new StringBuilder();
@@ -87,10 +93,11 @@ namespace Assembler_SIC
                 this.Size = name.Length;
                 return val.ToString();
             }
-            else
-            {
-                throw new InvalidOperationException("Literal isn't a valid integeral value");
-            }
+        }
+
+        public static void Flush()
+        {
+            LogFile.LogLine(Assembler.LitTab);
         }
     }
 }

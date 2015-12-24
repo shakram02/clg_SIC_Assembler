@@ -44,18 +44,28 @@ namespace Assembler_SIC
                         if (line.Value.StartsWith("="))
                         {
                             // TODO get the address from the literal table
-                            objCode.Append(
+                            try
+                            {
+                                objCode.Append(
                                 ((int)Assembler.LitTab[line.Value].Address).ToString("X")
                                 );
+                            }
+                            catch (IndexOutOfRangeException exc)
+                            {
+                                LogFile.LogError("Litteral table entry not found:" + exc.Message);
+                            }
+
                         }
                         else
                         {
                             objCode.Append(SymTab.GetAdress(line.Value).ToString("X"));
                         }
                     }
-                    // Convert the address to hexadecimal, ERROR address shall not be added in object code
-                    //objCode += line.Address.ToString("X");
+                    if(line.Label == "*")
+                    {
+                        objCode.Append(Assembler.LitTab[line.Operation].Value);
 
+                    }
                     // Store the object code in its place in the intermediate file
                     line.ObjectCode = objCode.ToString();
                 }
@@ -97,7 +107,10 @@ namespace Assembler_SIC
                             break;
 
                         default:
-                            line.ObjectCode = "??";
+                            {
+                                // Undefined operation
+                                // This part is left empty because it doesn't let the literals function correctly
+                            }
                             break;
                     }
             }

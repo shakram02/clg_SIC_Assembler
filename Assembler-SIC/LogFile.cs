@@ -42,5 +42,17 @@ namespace Assembler_SIC
                 Write($"{item.Address.ToString("X"),3} {(item.ObjectCode != "" ? item.ObjectCode.PadLeft(6, '0') : null),6} {item.Label,8} {item.Operation,8}        {item.Value}");
             }
         }
+
+        public static void LogLine(Dictionary<string, LitTabEntry> table)
+        {
+            Write("--------------------");
+            Write("Logging litteral table");
+
+            foreach (var item in table)
+            {
+                // Don't print the object code if it's empy
+                Write($"{item.Value.Name},{item.Value.Address},{item.Value.Value}");
+            }
+        }
     }
 }

@@ -20,6 +20,8 @@ namespace UnitTestProject1
             table.Flush();
             //System.Convert.ToInt64("0x005", 2);
             SymTab.Flush();
+            LitTabEntry.Flush();
+
             LogFile.CloseLog();
         }
         [TestMethod]

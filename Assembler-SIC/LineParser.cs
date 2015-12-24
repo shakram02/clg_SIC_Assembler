@@ -97,6 +97,7 @@ namespace Assembler_SIC
             {
                 IntermediateTable.Insert(new IntermediateFileEntry(line.Label, line.Operation, value: line.Operands, address: previousLocationCounter));
             }
+            // Prints the code file
             LogLine(line.Label, line.Operation, line.Operands);
         }
 
@@ -164,6 +165,16 @@ namespace Assembler_SIC
                 if (line.Operands.StartsWith("="))
                 {
                     // Add literal to table
+                    try
+                    {
+                        new LitTabEntry(line.Operands, null);
+                    }
+                    catch (InvalidOperationException exc)
+                    {
+                        LogError("Inalid literal:" + exc.Message);
+                        return false;
+                    }
+
                 }
                 // then add 3(instruction length) to LOCCTR
                 Assembler.LocationCounter += 3;
@@ -302,35 +313,45 @@ namespace Assembler_SIC
                             return false;
                         }
                     }
-                    else if (line.Operation == "ltorg")
-                    {
-                        // Flush littab into intermediate file
-                        foreach (var item in Assembler.LitTab)
-                        {
-                            // Set the address of the litteral table entry
-                            item.Value.Address = previousLocationCounter;
 
-                            // Insert items to the code
-                            IntermediateTable.Insert(
-                                new IntermediateFileEntry(
-                                    label: "*",
-                                operation: item.Value.Name,
-                                value: item.Value.Value,
-                                address: previousLocationCounter)
-                                );
-                            // Update location counter for the next variable
-                            previousLocationCounter += item.Value.Size;
-                        }
-
-                        // Update location counter manually
-                        Assembler.LocationCounter = previousLocationCounter;
-
-                    }
                     else
                     {
                         LogError($">{line.Label}< illegal label in byte statement");
                         return false;
                     }
+                }
+                else if (line.Operation == "ltorg")
+                {
+                    // Flush littab into intermediate file
+                    foreach (var item in Assembler.LitTab)
+                    {
+                        // Skip items already added
+                        if (item.Value.Inserted)
+                            continue;
+
+                        // Set the address of the litteral table entry
+                        item.Value.Address = previousLocationCounter;
+
+                        // Insert items to the code
+                        IntermediateTable.Insert(
+                            new IntermediateFileEntry(
+                                label: "*",
+                            operation: item.Value.Name,
+                            value: item.Value.Value,
+                            address: previousLocationCounter, objectCode: item.Value.Value)
+                            );
+
+                        // Mark the item to avoid adding it twice to the table
+                        item.Value.Inserted = true;
+                        // Update location counter for the next variable
+                        previousLocationCounter += item.Value.Size;
+                    }
+
+                    // Update location counter manually
+                    Assembler.LocationCounter = previousLocationCounter;
+
+                    // Don't insert to intermediate file
+                    return false;
                 }
                 else
                 {
