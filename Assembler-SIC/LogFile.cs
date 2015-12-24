@@ -15,36 +15,23 @@ namespace Assembler_SIC
             logFile.WriteLine("#  Loc label     operation       operands");
         }
 
-        public static void logError(string message)
-        {
+        public static void LogError(string message) =>
             logFile.WriteLine($"Line number {LineParser.lineNumber}, Error: " + message);
-        }
 
-        public static void Write(string message)
-        {
-            logFile.WriteLine(message);
-        }
+        public static void Write(string message) => logFile.WriteLine(message);
 
-        public static void logLine(string label, string operation, string operands)
-        {
+        public static void LogLine(string label, string operation, string operands) =>
             logFile.WriteLine($"{LineParser.lineNumber,2} {Assembler.LocationCounter.ToString(),4} {label,-8} {operation,-8}        {operands,-8}");
-        }
 
         /// <summary>
         /// Logs that the current line is a comment
         /// </summary>
         /// <param name="lineNumber">line number</param>
-        public static void logLine(int lineNumber, string comment)
-        {
-            logFile.WriteLine($"{lineNumber,2} {comment}");
-        }
+        public static void LogLine(int lineNumber, string comment) => logFile.WriteLine($"{lineNumber,2} {comment}");
 
-        public static void CloseLog()
-        {
-            logFile.Dispose();
-        }
+        public static void CloseLog() => logFile.Dispose();
 
-        public static void logLine(List<IntermediateFileEntry> table)
+        public static void LogLine(List<IntermediateFileEntry> table)
         {
             Write("--------------------");
             Write("Logging intermediate file");

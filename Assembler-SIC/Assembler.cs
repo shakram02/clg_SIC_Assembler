@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Assembler_SIC
@@ -11,6 +12,8 @@ namespace Assembler_SIC
         public static int ProgramLength = 0;
         public static int EndLocation = 0;
         public static int StartLocation = 0;
+
+        public static Dictionary<string, LitTabEntry> LitTab = new Dictionary<string, LitTabEntry>();
 
         // Source file name
         private static string _fileName;
@@ -28,7 +31,7 @@ namespace Assembler_SIC
         {
             try
             {
-                sourceFile = new StreamReader(_fileName);
+                    sourceFile = new StreamReader(_fileName);
                 return true;
             }
             catch (Exception exc)

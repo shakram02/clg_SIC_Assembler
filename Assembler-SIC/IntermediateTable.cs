@@ -5,14 +5,17 @@ namespace Assembler_SIC
     public class IntermediateFileEntry
     {
         public string Label;
+
         /// <summary>
         /// Location counter value
         /// </summary>
         public int Address;
+
         /// <summary>
         /// Operand value
         /// </summary>
         public string Value;
+
         public string Operation;
         public string ObjectCode;
 
@@ -67,7 +70,7 @@ namespace Assembler_SIC
         {
             // Create a pointer to the private list
             List<IntermediateFileEntry> list = intermediateList;
-            LogFile.logLine(list);
+            LogFile.LogLine(list);
         }
     }
 }

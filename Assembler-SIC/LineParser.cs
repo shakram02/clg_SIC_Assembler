@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
+// New in C# 6
+using static Assembler_SIC.LogFile;
 
 namespace Assembler_SIC
 {
@@ -45,7 +47,7 @@ namespace Assembler_SIC
                         }
                         else
                         {
-                            LogFile.logError("duplicate label definition");
+                            LogError("duplicate label definition");
                         }
                     }
                     else
@@ -60,7 +62,7 @@ namespace Assembler_SIC
                 else
                 {
                     // Can't assign this label, write to listing file, error in label format
-                    LogFile.logError($"{line.Label} {line.Operation} {line.Operands} can't assign this label");
+                    LogError($"{line.Label} {line.Operation} {line.Operands} can't assign this label");
                 }
             }
             else
@@ -73,7 +75,7 @@ namespace Assembler_SIC
                 else if (Assembler.CurrentCodeLine.isComment)
                 {
                     // Write the comment to the log file
-                    LogFile.logLine(lineNumber, Assembler.CurrentCodeLine.Comment);
+                    LogLine(lineNumber, Assembler.CurrentCodeLine.Comment);
                 }
             }
 
@@ -95,7 +97,7 @@ namespace Assembler_SIC
             {
                 IntermediateTable.Insert(new IntermediateFileEntry(line.Label, line.Operation, value: line.Operands, address: previousLocationCounter));
             }
-            LogFile.logLine(line.Label, line.Operation, line.Operands);
+            LogLine(line.Label, line.Operation, line.Operands);
         }
 
         /// <summary>
@@ -111,7 +113,7 @@ namespace Assembler_SIC
             {
                 if (String.IsNullOrEmpty(line.Label))
                 {
-                    LogFile.logError("Empty program name");
+                    LogError("Empty program name");
                     return false;
                 }
                 // Initialize the location counter using the TryParse, if it fails intialize it to 0
@@ -129,7 +131,7 @@ namespace Assembler_SIC
                     // Store the current line with the last advanced location counter
                     previousLocationCounter = Assembler.LocationCounter;
 
-                    LogFile.logError("Didn't find starting address, initializing location counter to 0");
+                    LogError("Didn't find starting address, initializing location counter to 0");
 
                     // Save the starting address as the current address
                     Assembler.StartLocation = Assembler.LocationCounter;
@@ -139,7 +141,7 @@ namespace Assembler_SIC
             // Start operation is not on the first line
             else if ((isStartLine < 1 || isStartLine == 0) && line.Operation == "start")
             {
-                LogFile.logError("Misplaced start statement");
+                LogError("Misplaced start statement");
                 return false;
             }
             else if (line.Operation == "end" && !foundEnd)
@@ -151,15 +153,18 @@ namespace Assembler_SIC
             }
             else if (line.Operation == "end" && foundEnd)
             {
-                LogFile.logError("Misplaced end statement");
+                LogError("Misplaced end statement");
                 return false;
             }
 
             // Find the operation in the optab
             if (OpTab.Exists(line.Operation))
             {
-                // TODO start exists in optab, set location counter to it and ensure it's used a single time
-
+                // TODO Deal with literals
+                if (line.Operands.StartsWith("="))
+                {
+                    // Add literal to table
+                }
                 // then add 3(instruction length) to LOCCTR
                 Assembler.LocationCounter += 3;
                 return true;
@@ -181,7 +186,7 @@ namespace Assembler_SIC
                     }
                     else
                     {
-                        LogFile.logError($">{line.Label}< illegal label in word statement");
+                        LogError($">{line.Label}< illegal label in word statement");
                         return false;
                     }
                 }
@@ -206,13 +211,13 @@ namespace Assembler_SIC
                         }
                         else
                         {
-                            LogFile.logError($">{line.Operands}< illegal operand in resw statement");
+                            LogError($">{line.Operands}< illegal operand in resw statement");
                             return false;
                         }
                     }
                     else
                     {
-                        LogFile.logError($">{line.Label}< illegal label in resw statement");
+                        LogError($">{line.Label}< illegal label in resw statement");
                         return false;
                     }
                 }
@@ -224,7 +229,6 @@ namespace Assembler_SIC
                     if (verifyField(line.Label, canBeEmpty: false))
                     {
                         // Get operand length
-
                         // Increment location counter
                         // Get the value of the operand
                         int numberOfBytesToReserve;
@@ -242,31 +246,29 @@ namespace Assembler_SIC
                         }
                         else
                         {
-                            LogFile.logError($">{line.Operands}< illegal operand in resb statement");
+                            LogError($">{line.Operands}< illegal operand in resb statement");
                             return false;
                         }
                     }
                     else
                     {
-                        LogFile.logError($">{line.Label}< illegal label in resb statement");
+                        LogError($">{line.Label}< illegal label in resb statement");
                         return false;
                     }
                 }
                 else if (line.Operation == "byte")
                 {
+                    // else if OPCODE = ‘BYTE’
+                    // find length of constant in bytes add length to LOCCTR
                     if (verifyField(line.Label, canBeEmpty: false))
                     {
-                        // else if OPCODE = ‘BYTE’
-                        // then begin find length of constant in bytes add length to LOCCTR
+                        // Get the operand without the leading and trailing characters
+                        string temp = line.Operands.Remove(0, 2);
+                        temp = temp.Remove(temp.Length - 1);
 
                         if (line.Operands.StartsWith("c'") && line.Operands.EndsWith("'"))
                         {
-                            // Get the operand without the leading and trailing characters
-                            string temp = line.Operands.Remove(0, 2);
-                            temp = temp.Remove(temp.Length - 1);
-
                             line.Operands = temp;
-
                             // Increment the location counter by one byte for each character
                             Assembler.LocationCounter += temp.Length;
 
@@ -276,18 +278,16 @@ namespace Assembler_SIC
                         else if (line.Operands.StartsWith("x'") && line.Operands.EndsWith("'"))
                         {
                             // Get the operand without the leading and trailing characters
-                            string temp = line.Operands.Remove(0, 2);
-                            temp = temp.Remove(temp.Length - 1);
-
                             line.Operands = temp;
 
                             if (temp.Length % 2 != 0)
                             {
-                                LogFile.logError($">{line.Operands}< Odd length hex string in byte statement");
+                                LogError($">{line.Operands}< Odd length hex string in byte statement");
                                 return false;
                             }
 
-                            int result = int.Parse(temp, System.Globalization.NumberStyles.HexNumber);
+                            // Convert the number to hexadecimal value and put it as the operand
+                            int result = int.Parse(temp, NumberStyles.HexNumber);
                             line.Operands = result.ToString();
 
                             // The number of bytes are the length of the hexstring divided by 2
@@ -298,19 +298,43 @@ namespace Assembler_SIC
                         }
                         else
                         {
-                            LogFile.logError($">{line.Operands}< illegal opearnd in byte statement");
+                            LogError($">{line.Operands}< illegal opearnd in byte statement");
                             return false;
                         }
                     }
+                    else if (line.Operation == "ltorg")
+                    {
+                        // Flush littab into intermediate file
+                        foreach (var item in Assembler.LitTab)
+                        {
+                            // Set the address of the litteral table entry
+                            item.Value.Address = previousLocationCounter;
+
+                            // Insert items to the code
+                            IntermediateTable.Insert(
+                                new IntermediateFileEntry(
+                                    label: "*",
+                                operation: item.Value.Name,
+                                value: item.Value.Value,
+                                address: previousLocationCounter)
+                                );
+                            // Update location counter for the next variable
+                            previousLocationCounter += item.Value.Size;
+                        }
+
+                        // Update location counter manually
+                        Assembler.LocationCounter = previousLocationCounter;
+
+                    }
                     else
                     {
-                        LogFile.logError($">{line.Label}< illegal label in byte statement");
+                        LogError($">{line.Label}< illegal label in byte statement");
                         return false;
                     }
                 }
                 else
                 {
-                    LogFile.logError($">{line.Operation}< Unindentified operation");
+                    LogError($">{line.Operation}< Unindentified operation");
                     return false;
                 }
             }
@@ -341,12 +365,12 @@ namespace Assembler_SIC
             }
             else if (Field.StartsWith(" ") || Field.Contains(" "))
             {
-                LogFile.logError("Label can't start with a whitespace");
+                LogError("Label can't start with a whitespace");
                 return false;
             }
             else if (Char.IsNumber(Field[0]))
             {
-                LogFile.logError("Label can't start with a number");
+                LogError("Label can't start with a number");
                 return false;
             }
             return true;

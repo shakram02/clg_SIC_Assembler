@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Assembler_SIC
 {
@@ -21,38 +22,42 @@ namespace Assembler_SIC
         {
             foreach (IntermediateFileEntry line in table)
             {
-                string objCode = "";
+                StringBuilder objCode = new StringBuilder();
                 MachineOperation currentOperation;
 
                 // The target address is calculated only when the operation is not an assembler directive
                 if ((currentOperation = OpTab.Get(line.Operation)) != null)
                 {
-                    // Operation found
-                    objCode += $"{currentOperation.OpCode.ToString("X")}";
-
                     // Calculate the address
                     if (line.Value.EndsWith(",x"))
                     {
-                        // Set the indexed mode bit
-                        line.Address |= (1 << 15);
+                        // Set the indexed mode bit, 
+                        int temp = currentOperation.OpCode | 1 << 15;
+
+                        objCode.Append(temp.ToString("X"));
                     }
                     else
                     {
-                        // TODO Get the address of the operand and convert it to hexa, then add it to the object code
+                        objCode.Append($"{currentOperation.OpCode.ToString("X")}");
+
+                        // Get the address of the operand and convert it to hexa, then add it to the object code
                         if (line.Value.StartsWith("="))
                         {
                             // TODO get the address from the literal table
+                            objCode.Append(
+                                ((int)Assembler.LitTab[line.Value].Address).ToString("X")
+                                );
                         }
                         else
                         {
-                            objCode += SymTab.GetAdress(line.Value).ToString("X");
+                            objCode.Append(SymTab.GetAdress(line.Value).ToString("X"));
                         }
                     }
                     // Convert the address to hexadecimal, ERROR address shall not be added in object code
                     //objCode += line.Address.ToString("X");
 
                     // Store the object code in its place in the intermediate file
-                    line.ObjectCode = objCode;
+                    line.ObjectCode = objCode.ToString();
                 }
                 // Check the operations
                 else
@@ -70,11 +75,13 @@ namespace Assembler_SIC
                             {
                                 // Operand is a text string
                                 char[] tempCharArray = line.Value.ToCharArray();
+                                StringBuilder objectCodeBuilder = new StringBuilder();
                                 foreach (char item in tempCharArray)
                                 {
                                     // Convert ascii value to hexadeciaml value
-                                    line.ObjectCode += ((int)item).ToString("X");
+                                    objectCodeBuilder.Append(((int)item).ToString("X"));
                                 }
+                                line.ObjectCode = objectCodeBuilder.ToString();
                                 break;
                             }
                         case "word":
@@ -98,18 +105,18 @@ namespace Assembler_SIC
 
         private static void writeHeaderRecord()
         {
-            string headerRecord = "";
+            StringBuilder headerRecord = new StringBuilder();
 
             // Get the program name
             if (String.IsNullOrEmpty(table[0].Label) == false)
             {
-                headerRecord += $"{table[0].Label,8}";
+                headerRecord.Append($"{table[0].Label,8}");
             }
             else
             {
-                LogFile.logError("Empty program name");
+                LogFile.LogError("Empty program name");
             }
-            headerRecord += Assembler.ProgramLength.ToString("X");
+            headerRecord.Append(Assembler.ProgramLength.ToString("X"));
 
             int objectProgramLength = 0;
             foreach (IntermediateFileEntry item in IntermediateTable.intermediateList)
@@ -123,9 +130,9 @@ namespace Assembler_SIC
             {
                 objProgramLength += line.ObjectCode.Length;
             }
-            headerRecord += objProgramLength.ToString("X");
+            headerRecord.Append(objProgramLength.ToString("X"));
 
-            ObjectCodeFile.WriteRecord("H" + headerRecord.Trim());
+            ObjectCodeFile.WriteRecord("H" + headerRecord.ToString().Trim());
         }
 
         private static void writeTextRecord()
@@ -135,7 +142,7 @@ namespace Assembler_SIC
             for (int i = 0; i < limit; i++)
             {
                 int recordObjectCodeLength = 0;
-                string textRecord = "";
+                StringBuilder textRecord = new StringBuilder();
 
                 for (; recordObjectCodeLength < 60 && i < limit; i++)
                 {
@@ -151,7 +158,7 @@ namespace Assembler_SIC
                         recordObjectCodeLength += currentEntry.ObjectCode.Length;
 
                         // Append the object code
-                        textRecord += currentEntry.ObjectCode;
+                        textRecord.Append(currentEntry.ObjectCode);
                     }
                 }
 

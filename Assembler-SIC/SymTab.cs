@@ -7,7 +7,7 @@ namespace Assembler_SIC
     /// </summary>
     public static class SymTab
     {
-        private static Dictionary<string, int> _symTab = new Dictionary<string, int>();
+        static Dictionary<string, int> _symTab = new Dictionary<string, int>();
 
         static SymTab()
         {
@@ -30,20 +30,13 @@ namespace Assembler_SIC
         /// </summary>
         /// <param name="TargetSymbol">Target symbol to be found</param>
         /// <returns></returns>
-        public static bool Exists(string TargetSymbol)
-        {
-            return _symTab.ContainsKey(TargetSymbol);
-        }
 
-        public static void Insert(string mnemonic, int address)
-        {
-            _symTab.Add(mnemonic, address);
-        }
+        /// New in C# 6, Expressions in methods -beacause it has braces-
+        public static bool Exists(string TargetSymbol) => _symTab.ContainsKey(TargetSymbol);
 
-        public static int GetAdress(string targetSymbol)
-        {
-            return _symTab[targetSymbol];
-        }
+        public static void Insert(string mnemonic, int address) => _symTab.Add(mnemonic, address);
+
+        public static int GetAdress(string targetSymbol) => _symTab[targetSymbol];
 
         public static void Flush()
         {

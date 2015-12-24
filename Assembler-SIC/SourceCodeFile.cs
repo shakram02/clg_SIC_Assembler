@@ -93,13 +93,12 @@ namespace Assembler_SIC
 
             try
             {
-                // TODO Add variable names for numbers
                 label = empty.Insert(0, line.Substring(0, 8)).TrimEnd().ToLower();
 
                 operationCode = empty.Insert(0, line.Substring(9, 8)).TrimEnd().ToLower();
 
                 temp = line.Substring(17);
-                if (temp.Contains("X'") || temp.Contains("C'"))
+                if (temp.StartsWith("X'") || temp.StartsWith("C'"))
                 {
                     temp = temp.Replace("X'", "x'");
                     temp = temp.Replace("C'", "c'");
@@ -112,7 +111,6 @@ namespace Assembler_SIC
                     // Assembler directrives cannot containt inline comments, so I use the operand field directly
                     operands = empty.Insert(0, temp.TrimEnd());
                 }
-
                 else if (indexOfSpace == -1 && indexOfSpace != 0)
                 {
                     // Space not found, the operand field doesn't contain a comment
@@ -124,7 +122,7 @@ namespace Assembler_SIC
                     if (indexOfSpace == 0)
                     {
                         // Misformated operand field
-                        LogFile.logError($"file read error in input line number {lineNumber}, misformated operand field");
+                        LogFile.LogError($"file read error in input line number {lineNumber}, misformated operand field");
                         lineStruct = new CodeLine(label, operationCode, operands, isComment: false, isError: true);
                         return false;
                     }
@@ -136,9 +134,8 @@ namespace Assembler_SIC
             {
                 // Write the line as it is to the list file
 
-
                 // Splitting Error
-                LogFile.logError($"file read error in input line number {lineNumber} Details:\n " + ex.Message);
+                LogFile.LogError($"file read error in input line number {lineNumber} Details:\n " + ex.Message);
 
                 // Return false to indicate that the location counter won't be incremented
                 lineStruct = new CodeLine(label, operationCode, operands, isComment: false, isError: true);
